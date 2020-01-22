@@ -23,14 +23,6 @@ const Joi = require('joi')
 //MIDDLEWARE
 app.use(express.json())
 
-//BASIC INPUT VALIDATION -- Make sure the word is at least 3 letters.
-function isWord(word) {
-    const schema = {
-        word: Joi.string().min(3).required()
-    }
-    return Joi.validate(word, schema)
-}
-
 //PYRAMID WORD ALGORITHM-------------------------------------------------------------------------------------
 this.isPyramid = (word) => {
     //Advanced Input Validation -- Filter out any non-alphabetic characters and set all letters to lowercase.
@@ -73,15 +65,17 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', (req, res) => {
-    const {error} = isWord(req.body)
-    if (error) return res.status(400).send(result.error.details[0].message)
+    //Basic input validation -- Return an error if the word is under 3 letters long
+    const schema = {
+        word: Joi.string().min(3).required()
+    }
+    const result = Joi.validate(req.body, schema)
+    if (result.error) return res.status(400).send(result.error.details[0].message)
     
-    //Customize output
-    const verdict = this.isPyramid(req.body.word) ? "TRUE" : "FALSE"
-    const verdictWords = this.isPyramid(req.body.word) ? "is" : "is not"
-    const isPyramidWord = `${verdict} || The word, \'${req.body.word},\' ${verdictWords} a pyramid word.`
+    //Pass the word to be evaluated by the pyramid word test
+    const isPyramidWord = this.isPyramid(req.body.word)    
 
-    //Deliver the verdict as a response
+    //Send true or false based on if the word passes the test
     res.send(isPyramidWord)
 })
 
